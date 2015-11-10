@@ -6,7 +6,6 @@ import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.XMPPConnection;
 
 /**
- *
  * @author Diogo Oliveira
  * @date 06/11/2015 11:56:33
  */
