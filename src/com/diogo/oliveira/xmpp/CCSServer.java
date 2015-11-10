@@ -2,60 +2,128 @@ package com.diogo.oliveira.xmpp;
 
 import com.diogo.oliveira.xmpp.connection.Connect;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.packet.DefaultExtensionElement;
-import org.jivesoftware.smack.packet.ExtensionElement;
-import org.jivesoftware.smack.provider.ExtensionElementProvider;
-import org.jivesoftware.smack.provider.ProviderManager;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
 
-import static com.diogo.oliveira.xmpp.util.Constants.GCM_ELEMENT_NAME;
-import static com.diogo.oliveira.xmpp.util.Constants.GCM_NAMESPACE;
+import static com.diogo.oliveira.xmpp.util.Constants.API_KEY;
+import static com.diogo.oliveira.xmpp.util.Constants.SENDER_ID;
+import static javax.ejb.ConcurrencyManagementType.BEAN;
 
 /**
- *
  * @author Diogo Oliveira
  * @date 05/11/2015 09:42:21
  */
-public class CCSServer extends Connect
+@Startup
+@Singleton
+@ConcurrencyManagement(BEAN)
+public class CCSServer
 {
-//    public static void main(String[] args) throws Exception
-//    {
-//        CCSServer server = new CCSServer(GCM_SENDER_ID, GCM_API_KEY);
-//
-//        String messageId = server.nextMessageId();
-//        Map<String, String> payload = new HashMap<>();
-//        payload.put("Message", "DIOGO ARAUJO OLIVEIRA");
-//        payload.put("CCS", "Dummy Message");
-//        payload.put("EmbeddedMessageId", messageId);
-//        String collapseKey = "sample";
-//        Long timeToLive = 10000L;
-//        String message = createJsonMessage(REGISTRATION_ID, messageId, payload, collapseKey, timeToLive, true);
-//
-//        server.sendDownstreamMessage(message);
-//
-//        while(true)
-//        {
-//        }
-//    }
+    private static final Logger LOGGER = Logger.getLogger(CCSServer.class.getName());
+    private static Connect SERVER;
+    private Thread thread;
 
-    static
+    public static synchronized Connect getInstance()
     {
-        ProviderManager.addExtensionProvider(GCM_ELEMENT_NAME, GCM_NAMESPACE, new ExtensionElementProvider<ExtensionElement>()
-        {
-            @Override
-            public DefaultExtensionElement parse(XmlPullParser parser, int initialDepth) throws XmlPullParserException, IOException
-            {
-                String json = parser.nextText();
-                return new GcmPacketExtension(json);
-            }
-        });
+        return SERVER;
     }
 
-    public CCSServer(String senderId, String apiKey) throws SmackException, IOException, XMPPException
+    @PostConstruct
+    void initiate()
     {
-        super(senderId, apiKey);
+        thread = new Thread(new CCSServer.startServer());
+        thread.setName("START SERVER XMPP");
+        thread.setDaemon(true);
+
+        thread.start();
+
+        LOGGER.log(Level.INFO, "[initiate()]");
+    }
+
+    @PreDestroy
+    void destroy()
+    {
+        if((SERVER != null) && SERVER.getConnection().isConnected())
+        {
+            SERVER.getConnection().disconnect();
+
+            try
+            {
+                thread.interrupt();
+                thread.join();
+            }
+            catch(InterruptedException ex)
+            {
+                LOGGER.log(Level.SEVERE, null, ex);
+            }
+        }
+
+        if(SERVER != null && SERVER.getConnection().isConnected())
+        {
+            SERVER.getConnection().disconnect();
+        }
+
+        LOGGER.log(Level.INFO, "[destroy()]");
+    }
+
+    private JsonObject getParameters()
+    {
+        try(InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("/parameters/gcm-parameters-json.json"))
+        {
+            if(inputStream != null)
+            {
+                JsonReader jsonReader = Json.createReader(inputStream);
+                inputStream.close();
+
+                return jsonReader.readObject();
+            }
+            else
+            {
+                LOGGER.log(Level.SEVERE, "Pasta \"Web-INF\" não contem arquivo \"gcm-parameters-json.json\".");
+            }
+        }
+        catch(IOException ex)
+        {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+
+        return null;
+    }
+
+    public class startServer implements Runnable
+    {
+        @Override
+        public void run()
+        {
+            if((SERVER == null) || (!SERVER.getConnection().isConnected()))
+            {
+                JsonObject jsonObject = getParameters();
+
+                if(jsonObject != null)
+                {
+                    if(jsonObject.containsKey(SENDER_ID) && jsonObject.containsKey(API_KEY))
+                    {
+                        try
+                        {
+                            SERVER = new Connect(jsonObject.getString(SENDER_ID), jsonObject.getString(API_KEY));
+                        }
+                        catch(SmackException | XMPPException | IOException ex)
+                        {
+                            LOGGER.log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

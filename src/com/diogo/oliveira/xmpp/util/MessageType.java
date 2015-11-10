@@ -1,8 +1,8 @@
 package com.diogo.oliveira.xmpp.util;
 
 /**
- *
- * @author diogo
+ * @author Diogo Oliveira
+ * @date 04/11/2015 12:12:34
  */
 public enum MessageType
 {
@@ -19,7 +19,7 @@ public enum MessageType
     {
         for(MessageType intervalo : MessageType.values())
         {
-            if(intervalo.value.equals(value))
+            if(intervalo.value == value)
             {
                 return intervalo;
             }

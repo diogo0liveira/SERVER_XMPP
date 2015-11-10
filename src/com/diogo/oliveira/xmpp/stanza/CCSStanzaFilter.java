@@ -4,7 +4,6 @@ import org.jivesoftware.smack.filter.StanzaFilter;
 import org.jivesoftware.smack.packet.Stanza;
 
 /**
- *
  * @author Diogo Oliveira
  * @date 04/11/2015 12:09:38
  */

@@ -1,6 +1,6 @@
 package com.diogo.oliveira.xmpp.stanza;
 
-import com.diogo.oliveira.xmpp.GcmPacketExtension;
+import com.diogo.oliveira.xmpp.connection.GcmPacketExtension;
 import com.diogo.oliveira.xmpp.util.MessageType;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,6 @@ import org.json.simple.parser.ParseException;
 import static com.diogo.oliveira.xmpp.util.Constants.GCM_NAMESPACE;
 
 /**
- *
  * @author Diogo Oliveira
  * @date 04/11/2015 12:12:34
  */
@@ -44,19 +43,31 @@ public abstract class CCSStanzaListener implements StanzaListener
     {
         try
         {
-            LOGGER.log(Level.INFO, "Recebido: {0}", stanza.toXML());
+            LOGGER.log(Level.WARNING, "************* 1 *************");
 
+            //LOGGER.log(Level.INFO, "Recebido: {0}", stanza.toXML());
             Message message = (Message)stanza;
+            LOGGER.log(Level.WARNING, "************* 2 *************");
+
             GcmPacketExtension gcmPacketExtension = (GcmPacketExtension)message.getExtension(GCM_NAMESPACE);
+            LOGGER.log(Level.WARNING, "************* 3 *************");
+
             String json = gcmPacketExtension.getJson();
+            LOGGER.log(Level.WARNING, "************* 4 *************");
 
             Map<String, Object> jsonObject = (Map<String, Object>)JSONValue.parseWithException(json);
+            LOGGER.log(Level.WARNING, "************* 5 *************");
+
+            LOGGER.log(Level.WARNING, "************* 6 *************");
+            String XXX = String.valueOf(MessageType.get(jsonObject.get("message_type")));
 
             /* Presente para "ACK/NACK", ou null caso contrário */
             switch(MessageType.get(jsonObject.get("message_type")))
             {
                 case NORMAL:
                 {
+                    LOGGER.log(Level.WARNING, "************* 7 *************");
+
                     /* Mensagem upstream normal */
                     processMessageUpstream(jsonObject);
 
@@ -161,7 +172,7 @@ public abstract class CCSStanzaListener implements StanzaListener
      *
      * @return
      */
-    public static String createJsonACK(String to, String messageId)
+    public String createJsonACK(String to, String messageId)
     {
         Map<String, Object> message = new HashMap<>();
         message.put("message_type", "ack");
@@ -186,7 +197,7 @@ public abstract class CCSStanzaListener implements StanzaListener
      *
      * @return JSON encoded GCM message.
      */
-    public static String createJsonMessage(String to, String messageId, Map<String, String> payload, String collapseKey, Long timeToLive, Boolean delayWhileIdle)
+    public String createJsonMessage(String to, String messageId, Map<String, String> payload, String collapseKey, Long timeToLive, Boolean delayWhileIdle)
     {
         Map<String, Object> message = new HashMap<>();
         message.put("message_id", messageId);

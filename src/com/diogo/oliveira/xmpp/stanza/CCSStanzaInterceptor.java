@@ -7,7 +7,6 @@ import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.packet.Stanza;
 
 /**
- *
  * @author Diogo Oliveira
  * @date 04/11/2015 12:34:38
  */

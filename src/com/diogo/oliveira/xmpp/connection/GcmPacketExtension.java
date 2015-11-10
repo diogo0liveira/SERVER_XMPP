@@ -1,4 +1,4 @@
-package com.diogo.oliveira.xmpp;
+package com.diogo.oliveira.xmpp.connection;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,7 +11,6 @@ import static com.diogo.oliveira.xmpp.util.Constants.GCM_ELEMENT_NAME;
 import static com.diogo.oliveira.xmpp.util.Constants.GCM_NAMESPACE;
 
 /**
- *
  * @author Diogo Oliveira
  * @date 06/11/2015 12:00:42
  */
