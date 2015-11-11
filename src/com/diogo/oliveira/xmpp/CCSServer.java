@@ -47,7 +47,7 @@ public class CCSServer
 
         thread.start();
 
-        LOGGER.log(Level.INFO, "[initiate()]");
+        LOGGER.log(Level.INFO, "[INITIATE]");
     }
 
     @PreDestroy
@@ -73,7 +73,7 @@ public class CCSServer
             SERVER.getConnection().disconnect();
         }
 
-        LOGGER.log(Level.INFO, "[destroy()]");
+        LOGGER.log(Level.INFO, "[DESTROY]");
     }
 
     private JsonObject getParameters()
