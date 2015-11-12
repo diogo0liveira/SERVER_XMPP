@@ -1,4 +1,4 @@
-package com.diogo.oliveira.xmpp.util;
+package com.gcm.server.xmpp.util;
 
 /**
  * @author Diogo Oliveira
@@ -10,7 +10,7 @@ public class Constants
     public static final String GCM_ELEMENT_NAME = "gcm";
 
     public static final String GCM_SERVER = "gcm.googleapis.com";
-    public static final int GCM_PORT = 5235;
+    public static final int GCM_PORT = 5236;
 
     public static final String SENDER_ID = "sender_id";
     public static final String API_KEY = "api_key";

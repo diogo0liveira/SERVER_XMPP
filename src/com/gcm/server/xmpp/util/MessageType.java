@@ -1,8 +1,8 @@
-package com.diogo.oliveira.xmpp.util;
+package com.gcm.server.xmpp.util;
 
 /**
  * @author Diogo Oliveira
- * @date 04/11/2015 12:12:34
+ * @date 06/11/2015 11:07:16
  */
 public enum MessageType
 {

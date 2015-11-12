@@ -1,4 +1,4 @@
-package com.diogo.oliveira.xmpp.stanza;
+package com.gcm.server.xmpp.stanza;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,6 +15,6 @@ public class CCSStanzaInterceptor implements StanzaListener
     @Override
     public void processPacket(Stanza stanza) throws SmackException.NotConnectedException
     {
-        Logger.getLogger(CCSStanzaInterceptor.class.getName()).log(Level.INFO, "Sent: {0}", stanza.toXML());
+        Logger.getLogger(CCSStanzaInterceptor.class.getName()).log(Level.INFO, "[CCSSTANZAINTERCEPTOR] Sent: {0}", stanza.toXML());
     }
 }

@@ -1,4 +1,4 @@
-package com.diogo.oliveira.xmpp.connection;
+package com.gcm.server.xmpp.connection;
 
 import java.io.IOException;
 import org.jivesoftware.smack.SmackException;
@@ -10,8 +10,8 @@ import org.jivesoftware.smack.provider.ProviderManager;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import static com.diogo.oliveira.xmpp.util.Constants.GCM_ELEMENT_NAME;
-import static com.diogo.oliveira.xmpp.util.Constants.GCM_NAMESPACE;
+import static com.gcm.server.xmpp.util.Constants.GCM_ELEMENT_NAME;
+import static com.gcm.server.xmpp.util.Constants.GCM_NAMESPACE;
 
 /**
  * @author Diogo Oliveira

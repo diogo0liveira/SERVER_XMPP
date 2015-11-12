@@ -1,4 +1,4 @@
-package com.diogo.oliveira.xmpp.connection;
+package com.gcm.server.xmpp.connection;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,42 +16,42 @@ public class LoggingConnectionListener implements ConnectionListener
     @Override
     public void connected(XMPPConnection xmppConnection)
     {
-        LOGGER.info("Conectado.");
+        LOGGER.info("[CONNECTED]: Conectado.");
     }
 
     @Override
     public void reconnectionSuccessful()
     {
-        LOGGER.info("Reconectando..");
+        LOGGER.info("[RECONNECTIONSUCCESSFUL]: Reconectando.");
     }
 
     @Override
     public void reconnectionFailed(Exception e)
     {
-        LOGGER.log(Level.INFO, "Reconexão falhou.. ", e);
+        LOGGER.log(Level.INFO, "[RECONNECTIONFAILED]: Reconexão falhou. ", e);
     }
 
     @Override
     public void reconnectingIn(int seconds)
     {
-        LOGGER.log(Level.INFO, "Reconnecting in %d secs", seconds);
+        LOGGER.log(Level.INFO, "[RECONNECTINGIN]: Reconectando em %d segundos", seconds);
     }
 
     @Override
     public void connectionClosedOnError(Exception e)
     {
-        LOGGER.log(Level.INFO, "Conexão fechada, houver erro. ", e);
+        LOGGER.log(Level.INFO, "[CONNECTIONCLOSEDONERROR]: Conexão fechada, houver erro. ", e);
     }
 
     @Override
     public void connectionClosed()
     {
-        LOGGER.info("Conexão fechada.");
+        LOGGER.info("[CONNECTIONCLOSED]: Conexão fechada.");
     }
 
     @Override
     public void authenticated(XMPPConnection connection, boolean debuggable)
     {
-        LOGGER.info("Autenticado.");
+        LOGGER.info("[AUTHENTICATED]: Autenticado.");
     }
 }

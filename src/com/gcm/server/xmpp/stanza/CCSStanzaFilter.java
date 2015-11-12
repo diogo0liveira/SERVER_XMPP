@@ -1,4 +1,4 @@
-package com.diogo.oliveira.xmpp.stanza;
+package com.gcm.server.xmpp.stanza;
 
 import org.jivesoftware.smack.filter.StanzaFilter;
 import org.jivesoftware.smack.packet.Stanza;

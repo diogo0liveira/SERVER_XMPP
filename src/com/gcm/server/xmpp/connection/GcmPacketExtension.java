@@ -1,4 +1,4 @@
-package com.diogo.oliveira.xmpp.connection;
+package com.gcm.server.xmpp.connection;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -7,14 +7,14 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.util.StringUtils;
 
-import static com.diogo.oliveira.xmpp.util.Constants.GCM_ELEMENT_NAME;
-import static com.diogo.oliveira.xmpp.util.Constants.GCM_NAMESPACE;
+import static com.gcm.server.xmpp.util.Constants.GCM_ELEMENT_NAME;
+import static com.gcm.server.xmpp.util.Constants.GCM_NAMESPACE;
 
 /**
  * @author Diogo Oliveira
  * @date 06/11/2015 12:00:42
  */
-public class GcmPacketExtension extends DefaultExtensionElement
+class GcmPacketExtension extends DefaultExtensionElement
 {
     private static final Logger LOGGER = Logger.getLogger(GcmPacketExtension.class.getName());
     private final String json;

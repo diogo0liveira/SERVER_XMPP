@@ -1,6 +1,6 @@
-package com.diogo.oliveira.xmpp;
+package com.gcm.server.xmpp;
 
-import com.diogo.oliveira.xmpp.connection.Connect;
+import com.gcm.server.xmpp.connection.Connect;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
@@ -16,8 +16,8 @@ import javax.json.JsonReader;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 
-import static com.diogo.oliveira.xmpp.util.Constants.API_KEY;
-import static com.diogo.oliveira.xmpp.util.Constants.SENDER_ID;
+import static com.gcm.server.xmpp.util.Constants.API_KEY;
+import static com.gcm.server.xmpp.util.Constants.SENDER_ID;
 import static javax.ejb.ConcurrencyManagementType.BEAN;
 
 /**
@@ -100,7 +100,7 @@ public class CCSServer
         return null;
     }
 
-    public class startServer implements Runnable
+    private class startServer implements Runnable
     {
         @Override
         public void run()
@@ -121,6 +121,10 @@ public class CCSServer
                         {
                             LOGGER.log(Level.SEVERE, null, ex);
                         }
+                    }
+                    else
+                    {
+                        LOGGER.log(Level.SEVERE, "Parametros no arquivo \"gcm-parameters-json.json\" estão incorretos.");
                     }
                 }
             }
