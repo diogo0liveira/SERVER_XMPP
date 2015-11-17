@@ -1,11 +1,11 @@
 package com.gcm.server.xmpp.connection;
 
-import com.gcm.server.xmpp.GCMMessage;
+import com.gcm.server.xmpp.CCSServer;
 import com.gcm.server.xmpp.MessageReceivedListener;
+import com.gcm.server.xmpp.XMPPMessage;
 import com.gcm.server.xmpp.stanza.CCSStanzaFilter;
 import com.gcm.server.xmpp.stanza.CCSStanzaInterceptor;
 import com.gcm.server.xmpp.util.JsonKey;
-import com.gcm.server.xmpp.util.MessageType;
 import java.io.IOException;
 import javax.net.ssl.SSLSocketFactory;
 import org.jivesoftware.smack.ConnectionConfiguration;
@@ -27,14 +27,13 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
 
+import static com.gcm.server.xmpp.XMPPMessage.Type.CONTROL;
+import static com.gcm.server.xmpp.XMPPMessage.Type.NACK;
+import static com.gcm.server.xmpp.XMPPMessage.Type.RECEIPT;
+import static com.gcm.server.xmpp.XMPPMessage.Type.UNRECOGNIZED;
 import static com.gcm.server.xmpp.util.Constants.GCM_NAMESPACE;
 import static com.gcm.server.xmpp.util.Constants.GCM_PORT;
 import static com.gcm.server.xmpp.util.Constants.GCM_SERVER;
-import static com.gcm.server.xmpp.util.MessageType.ACK;
-import static com.gcm.server.xmpp.util.MessageType.CONTROL;
-import static com.gcm.server.xmpp.util.MessageType.NACK;
-import static com.gcm.server.xmpp.util.MessageType.NORMAL;
-import static com.gcm.server.xmpp.util.MessageType.UNRECOGNIZED;
 
 /**
  * @author Diogo Oliveira
@@ -58,7 +57,7 @@ abstract class Connection
                 .setDebuggerEnabled(true)
                 .setCompressionEnabled(false)
                 .setSocketFactory(SSLSocketFactory.getDefault())
-                .setSecurityMode(ConnectionConfiguration.SecurityMode.disabled)
+                .setSecurityMode(ConnectionConfiguration.SecurityMode.ifpossible)
                 .build();
 
         connection = new XMPPTCPConnection(configuration);
@@ -87,16 +86,14 @@ abstract class Connection
             GcmPacketExtension gcmPacketExtension = (GcmPacketExtension)message.getExtension(GCM_NAMESPACE);
 
             String json = gcmPacketExtension.getJson();
-            Map<String, Object> jsonObject = (Map<String, Object>)JSONValue.parseWithException(json);
+            JSONObject jSONObject = (JSONObject)JSONValue.parseWithException(json);
 
-            switch(MessageType.get(jsonObject.get(JsonKey.MESSAGE_TYPE)))
+            switch(XMPPMessage.Type.get(jSONObject.get(JsonKey.MESSAGE_TYPE)))
             {
                 case NORMAL:
                 {
-                    JSONObject jSONObject = new JSONObject(jsonObject);
-
                     /* Enviar ACK para CCS */
-                    sendMessageACK(jSONObject);
+                    sendACK(jSONObject);
 
                     if(messageReceivedListener != null)
                     {
@@ -104,7 +101,7 @@ abstract class Connection
                     }
                     else
                     {
-                        receivedMessage(new JSONObject(jsonObject));
+                        processMessage(jSONObject);
                     }
 
                     break;
@@ -112,32 +109,38 @@ abstract class Connection
                 case ACK:
                 {
                     /* Processa mensagem ACK */
-                    processReceiptACK(jsonObject);
+                    processReceiptACK(jSONObject);
                     break;
                 }
                 case NACK:
                 {
                     /* Processa mensagem NACK */
-                    processReceiptNACK(jsonObject);
+                    processReceiptNACK(jSONObject);
                     break;
                 }
                 case CONTROL:
                 {
                     /* Processa mensagem CONTROL */
-                    processMessageControl(jsonObject);
+                    processMessageControl(jSONObject);
+                    break;
+                }
+                case RECEIPT:
+                {
+                    /* Enviar ACK para CCS */
+                    sendACK(jSONObject);
                     break;
                 }
                 case UNRECOGNIZED:
                 default:
                 {
-                    LOGGER.log(Level.WARNING, "[PROCESSPACKET]: Tipo de mensagem não reconhecido,  (%s)", jsonObject.get("message_type").toString());
+                    LOGGER.log(Level.WARNING, "[PROCESSPACKET]: Tipo de mensagem não reconhecido,  (%s)", jSONObject.get(JsonKey.MESSAGE_TYPE).toString());
                     break;
                 }
             }
         }
         catch(ParseException ex)
         {
-            Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, "[PROCESSMESSAGEPACKET] (com.gcm.server.xmpp.connection.Connection).", ex);
+            Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -155,19 +158,19 @@ abstract class Connection
     }
 
     /**
-     * Cria uma mensagem de ACK JSON para uma mensagem upstream recebida de um aplicativo.
+     * Criar uma mensagem de ACK JSON para uma mensagem upstream recebida de um aplicativo.
      *
      * @param jSONObject Json da mensagem recebida.
      */
-    private void sendMessageACK(JSONObject jSONObject)
+    private void sendACK(JSONObject jSONObject)
     {
         try
         {
-            send(GCMMessage.with(jSONObject.get(JsonKey.FROM), jSONObject.get(JsonKey.MESSAGE_ID)).setMessageType(JsonKey.ACK));
+            connection.sendStanza(new GcmPacketExtension(XMPPMessage.ack(jSONObject.get(JsonKey.FROM), jSONObject.get(JsonKey.MESSAGE_ID)).toJSONString()).toPacket());
         }
         catch(SmackException.NotConnectedException ex)
         {
-            LOGGER.log(Level.SEVERE, "[SENDMESSAGEACK] (com.gcm.server.xmpp.connection.Connection).", ex);
+            LOGGER.log(Level.SEVERE, "[SENDACK]: (com.server.xmpp.connection.Connection).", ex);
         }
     }
 
@@ -178,7 +181,7 @@ abstract class Connection
      *
      * @throws NotConnectedException
      */
-    private void send(GCMMessage message) throws SmackException.NotConnectedException
+    private void send(XMPPMessage message) throws SmackException.NotConnectedException
     {
         connection.sendStanza(new GcmPacketExtension(message.toJSONString()).toPacket());
     }
@@ -192,7 +195,7 @@ abstract class Connection
      *
      * @throws NotConnectedException
      */
-    public boolean sendMessage(GCMMessage message) throws SmackException.NotConnectedException
+    public boolean sendMessage(XMPPMessage message) throws SmackException.NotConnectedException
     {
         if(!connectionDraining)
         {
@@ -213,11 +216,11 @@ abstract class Connection
      *
      * @param jsonObject Mensagem a ser enviada no formato json.
      */
-    private void receivedMessage(JSONObject jsonObject)
+    private void processMessage(JSONObject jsonObject)
     {
-        GCMMessage message = GCMMessage.with(jsonObject.get(JsonKey.FROM), jsonObject.get(JsonKey.MESSAGE_ID))
+        XMPPMessage message = XMPPMessage.with(jsonObject.get(JsonKey.FROM), jsonObject.get(JsonKey.MESSAGE_ID))
                 .setData(jsonObject.get(JsonKey.DATA))
-                .setDelayWhileIdle(false);
+                .setAction(JsonKey.ECHO);
 
         try
         {
@@ -233,10 +236,13 @@ abstract class Connection
 
     protected void processMessageControl(Map<String, Object> jsonObject)
     {
-        if("CONNECTION_DRAINING".equals(jsonObject.get(JsonKey.CONTROL_TYPE).toString()))
+        if(("CONNECTION_DRAINING").equals(jsonObject.get(JsonKey.CONTROL_TYPE).toString()))
         {
             connectionDraining = true;
             LOGGER.log(Level.INFO, "[PROCESSMESSAGECONTROL]: {0}", "Conexão em Draining.");
+
+            new CCSServer().createNewConnection();
+            connectionDraining = CCSServer.getInstance().getConnection().isConnected();
         }
         else
         {
@@ -288,7 +294,7 @@ abstract class Connection
         @Override
         public void processPacket(Stanza stanza) throws SmackException.NotConnectedException
         {
-            LOGGER.log(Level.INFO, "[PROCESSPACKET]: {0}", stanza.toXML());
+            LOGGER.log(Level.INFO, "[PROCESSPACKET]: XML - {0}", stanza.toXML());
             processMessagePacket(stanza);
         }
     }

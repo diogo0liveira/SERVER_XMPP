@@ -1,4 +1,4 @@
-package com.gcm.server.xmpp;
+package com.server.xmpp;
 
 import org.json.simple.JSONObject;
 

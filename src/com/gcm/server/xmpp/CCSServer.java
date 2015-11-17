@@ -3,11 +3,12 @@ package com.gcm.server.xmpp;
 import com.gcm.server.xmpp.connection.Connect;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.ejb.ConcurrencyManagement;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.json.Json;
@@ -18,7 +19,6 @@ import org.jivesoftware.smack.XMPPException;
 
 import static com.gcm.server.xmpp.util.Constants.API_KEY;
 import static com.gcm.server.xmpp.util.Constants.SENDER_ID;
-import static javax.ejb.ConcurrencyManagementType.BEAN;
 
 /**
  * @author Diogo Oliveira
@@ -26,7 +26,6 @@ import static javax.ejb.ConcurrencyManagementType.BEAN;
  */
 @Startup
 @Singleton
-@ConcurrencyManagement(BEAN)
 public class CCSServer
 {
     private static final Logger LOGGER = Logger.getLogger(CCSServer.class.getName());
@@ -41,11 +40,19 @@ public class CCSServer
     @PostConstruct
     void initiate()
     {
-        thread = new Thread(new CCSServer.startServer());
-        thread.setName("START SERVER XMPP");
-        thread.setDaemon(true);
+        try
+        {
+            thread = new Thread(new CCSServer.startServer());
+            thread.setName("START SERVER XMPP");
+            thread.setDaemon(true);
 
-        thread.start();
+            thread.start();
+            thread.join();
+        }
+        catch(InterruptedException ex)
+        {
+            Logger.getLogger(CCSServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
         LOGGER.log(Level.INFO, "[INITIATE]");
     }
@@ -64,7 +71,7 @@ public class CCSServer
             }
             catch(InterruptedException ex)
             {
-                LOGGER.log(Level.SEVERE, "[DESTROY]: (com.gcm.server.xmpp.CCSServer).", ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
 
@@ -94,7 +101,7 @@ public class CCSServer
         }
         catch(IOException ex)
         {
-            LOGGER.log(Level.SEVERE, "[GETPARAMETERS]: (com.gcm.server.xmpp.CCSServer).", ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
 
         return null;
@@ -105,29 +112,54 @@ public class CCSServer
         @Override
         public void run()
         {
-            if((SERVER == null) || (!SERVER.getConnection().isConnected()))
+            if(isConnected())
             {
-                JsonObject jsonObject = getParameters();
-
-                if(jsonObject != null)
+                if((SERVER == null) || (!SERVER.getConnection().isConnected()))
                 {
-                    if(jsonObject.containsKey(SENDER_ID) && jsonObject.containsKey(API_KEY))
+                    JsonObject jsonObject = getParameters();
+
+                    if(jsonObject != null)
                     {
-                        try
+                        if(jsonObject.containsKey(SENDER_ID) && jsonObject.containsKey(API_KEY))
                         {
-                            SERVER = new Connect(jsonObject.getString(SENDER_ID), jsonObject.getString(API_KEY));
+                            try
+                            {
+                                SERVER = new Connect(jsonObject.getString(SENDER_ID), jsonObject.getString(API_KEY));
+                            }
+                            catch(SmackException | XMPPException | IOException ex)
+                            {
+                                LOGGER.log(Level.SEVERE, null, ex);
+                            }
                         }
-                        catch(SmackException | XMPPException | IOException ex)
+                        else
                         {
-                            LOGGER.log(Level.SEVERE, "[STARTSERVER.RUN] (com.gcm.server.xmpp.CCSServer).", ex);
+                            LOGGER.log(Level.SEVERE, "Parametros no arquivo \"gcm-parameters-json.json\" estão incorretos.");
                         }
-                    }
-                    else
-                    {
-                        LOGGER.log(Level.SEVERE, "Parametros no arquivo \"gcm-parameters-json.json\" estão incorretos.");
                     }
                 }
             }
+        }
+    }
+
+    public final void createNewConnection()
+    {
+        initiate();
+    }
+
+    private boolean isConnected()
+    {
+        try
+        {
+            URLConnection connection = new URL("https://www.google.com").openConnection();
+            connection.setConnectTimeout(2000);
+            connection.setReadTimeout(2000);
+            connection.getInputStream();
+            return true;
+        }
+        catch(IOException e)
+        {
+            LOGGER.log(Level.SEVERE, "Servidor sem conexão com a internet.", e);
+            return false;
         }
     }
 }
