@@ -83,8 +83,6 @@ abstract class Connection
     {
         try
         {
-            LOGGER.log(Level.INFO, "[PROCESSPACKET]: {0}", stanza.toXML());
-
             Message message = (Message)stanza;
             GcmPacketExtension gcmPacketExtension = (GcmPacketExtension)message.getExtension(GCM_NAMESPACE);
 
@@ -139,7 +137,7 @@ abstract class Connection
         }
         catch(ParseException ex)
         {
-            Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Connection.class.getName()).log(Level.SEVERE, "[PROCESSMESSAGEPACKET] (com.gcm.server.xmpp.connection.Connection).", ex);
         }
     }
 
@@ -169,7 +167,7 @@ abstract class Connection
         }
         catch(SmackException.NotConnectedException ex)
         {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "[SENDMESSAGEACK] (com.gcm.server.xmpp.connection.Connection).", ex);
         }
     }
 

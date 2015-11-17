@@ -64,7 +64,7 @@ public class CCSServer
             }
             catch(InterruptedException ex)
             {
-                LOGGER.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, "[DESTROY]: (com.gcm.server.xmpp.CCSServer).", ex);
             }
         }
 
@@ -94,7 +94,7 @@ public class CCSServer
         }
         catch(IOException ex)
         {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, "[GETPARAMETERS]: (com.gcm.server.xmpp.CCSServer).", ex);
         }
 
         return null;
@@ -119,7 +119,7 @@ public class CCSServer
                         }
                         catch(SmackException | XMPPException | IOException ex)
                         {
-                            LOGGER.log(Level.SEVERE, null, ex);
+                            LOGGER.log(Level.SEVERE, "[STARTSERVER.RUN] (com.gcm.server.xmpp.CCSServer).", ex);
                         }
                     }
                     else
